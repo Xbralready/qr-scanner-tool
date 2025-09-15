@@ -19,6 +19,6 @@
     }
   ],
   "env": {
-    "VITE_API_BASE_URL": "https://qr-scanner-backend-3e8gyg240-xuebangrui-6955s-projects.vercel.app"
+    "VITE_API_BASE_URL": "https://qr-scanner-backend-latest.onrender.com"
   }
 }
