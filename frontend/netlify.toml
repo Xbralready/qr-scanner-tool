@@ -1,0 +1,46 @@
+[build]
+  # 构建命令
+  command = "npm run build"
+  # 构建输出目录
+  publish = "dist"
+  # Node.js版本
+  environment = { NODE_VERSION = "18" }
+
+[build.environment]
+  # Netlify 环境变量
+  CI = "false"
+
+# SPA重定向规则 - 支持前端路由
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 安全头配置
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# 静态资源缓存
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# API代理 (如果需要避免CORS问题)
+[[redirects]]
+  from = "/api/*"
+  to = "YOUR_BACKEND_URL/api/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
+
+# 错误页面
+[[redirects]]
+  from = "/404"
+  to = "/index.html"
+  status = 404

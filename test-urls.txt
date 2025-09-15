@@ -1,0 +1,3 @@
+https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://weixin.qq.com/r/test123
+https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.baidu.com
+https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Hello%20World
