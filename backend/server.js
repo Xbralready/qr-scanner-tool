@@ -773,12 +773,12 @@ app.post('/api/spider-scan-stream', async (req, res) => {
       return res.status(400).json({ error: '最大深度必须在1-5之间' });
     }
 
-    if (maxPages < 1 || maxPages > 200) {
-      return res.status(400).json({ error: '最大页面数必须在1-200之间' });
+    if (maxPages < 1 || maxPages > 50) {
+      return res.status(400).json({ error: '最大页面数必须在1-50之间' });
     }
 
-    if (delay < 500 || delay > 10000) {
-      return res.status(400).json({ error: '延时必须在500-10000ms之间' });
+    if (delay < 500 || delay > 5000) {
+      return res.status(400).json({ error: '延时必须在500-5000ms之间' });
     }
 
     console.log(`收到Spider爬取请求: ${baseUrl}, 深度=${maxDepth}, 页面=${maxPages}, 延时=${delay}ms`);
@@ -830,7 +830,17 @@ app.post('/api/spider-scan-stream', async (req, res) => {
 // Spider爬取API (原有的一次性返回)
 app.post('/api/spider-scan', async (req, res) => {
   try {
-    const { baseUrl, maxDepth = 3, maxPages = 50, delay = 1000 } = req.body;
+    // Vercel Pro 版本：支持 60 秒执行时间
+    const maxDepthDefault = 2; // 合理的爬取深度
+    const maxPagesDefault = 20; // 合理的页面数量
+    const delayDefault = 1000;  // 合理的延迟
+
+    const {
+      baseUrl,
+      maxDepth = maxDepthDefault,
+      maxPages = maxPagesDefault,
+      delay = delayDefault
+    } = req.body;
 
     if (!baseUrl) {
       return res.status(400).json({ error: '缺少baseUrl参数' });
@@ -848,12 +858,12 @@ app.post('/api/spider-scan', async (req, res) => {
       return res.status(400).json({ error: '最大深度必须在1-5之间' });
     }
 
-    if (maxPages < 1 || maxPages > 200) {
-      return res.status(400).json({ error: '最大页面数必须在1-200之间' });
+    if (maxPages < 1 || maxPages > 50) {
+      return res.status(400).json({ error: '最大页面数必须在1-50之间' });
     }
 
-    if (delay < 500 || delay > 10000) {
-      return res.status(400).json({ error: '延时必须在500-10000ms之间' });
+    if (delay < 500 || delay > 5000) {
+      return res.status(400).json({ error: '延时必须在500-5000ms之间' });
     }
 
     console.log(`收到Spider爬取请求: ${baseUrl}, 深度=${maxDepth}, 页面=${maxPages}, 延时=${delay}ms`);
