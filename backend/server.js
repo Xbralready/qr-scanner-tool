@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const { RateLimiterMemory } = require('rate-limiter-flexible');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const sharp = require('sharp');
 const jsQR = require('jsqr');
 const { BrowserMultiFormatReader } = require('@zxing/library');
@@ -110,24 +110,15 @@ const downloadWebPage = async (url, timeout = 15000) => {
       throw new Error('无效的URL');
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const response = await fetch(url, {
-      signal: controller.signal,
+    const response = await axios.get(url, {
+      timeout: timeout,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
       }
     });
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.text();
+    return response.data;
   } catch (error) {
     if (error.code === 'ECONNABORTED') {
       throw new Error('网页加载超时');
@@ -152,30 +143,21 @@ const downloadImage = async (imageUrl, baseUrl, timeout = 15000) => {
       fullUrl = new URL(imageUrl, baseUrl).href;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const response = await fetch(fullUrl, {
-      signal: controller.signal,
+    const response = await axios.get(fullUrl, {
+      responseType: 'arraybuffer',
+      timeout: timeout,
+      maxContentLength: 10 * 1024 * 1024,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'image/png, image/jpeg, image/jpg, image/gif, image/webp, */*'
       }
     });
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-
-    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+    if (!response.data || response.data.byteLength === 0) {
       throw new Error('下载的图片为空');
     }
 
-    return Buffer.from(arrayBuffer);
+    return Buffer.from(response.data);
   } catch (error) {
     throw new Error(`图片下载失败: ${error.message}`);
   }
@@ -471,24 +453,14 @@ const spiderScanWebsiteStream = async (baseUrl, options = {}, onEvent) => {
       // 如果还没达到最大深度，提取页面链接
       if (depth < maxDepth) {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-          const response = await fetch(currentUrl, {
-            signal: controller.signal,
+          const response = await axios.get(currentUrl, {
+            timeout: 10000,
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
           });
 
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          const html = await response.text();
-          const $ = cheerio.load(html);
+          const $ = cheerio.load(response.data);
           const baseUrlObj = new URL(baseUrl);
 
           $('a[href]').each((_, element) => {
